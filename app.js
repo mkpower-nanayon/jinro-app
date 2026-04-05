@@ -24,7 +24,8 @@ let currentRoom;
 window.joinRoom = function () {
   const roomId = document.getElementById("roomId").value;
   const name = document.getElementById("name").value;
-
+  localStorage.setItem("roomId", roomId);
+  localStorage.setItem("name", name);
   currentRoom = roomId;
   playerId = "player_" + Math.random().toString(36).substr(2, 5);
 
@@ -109,4 +110,37 @@ function showResult(players) {
   });
 
   document.body.appendChild(resultDiv);
+}
+
+function startGame() {
+  const roles = ["人狼", "市民", "占い師", "警察"];
+
+  onValue(ref(db, `rooms/${currentRoom}/players`), (snapshot) => {
+    const players = snapshot.val();
+    const ids = Object.keys(players);
+
+    ids.forEach((pid) => {
+      const shuffled = [...roles].sort(() => 0.5 - Math.random());
+
+      set(ref(db, `rooms/${currentRoom}/players/${pid}/cards`), [
+        shuffled[0],
+        shuffled[1]
+      ]);
+    });
+  }, { onlyOnce: true });
+}
+
+playerId = localStorage.getItem("playerId");
+
+if (!playerId) {
+  playerId = "player_" + Math.random().toString(36).substr(2, 5);
+  localStorage.setItem("playerId", playerId);
+}
+
+const savedRoom = localStorage.getItem("roomId");
+const savedName = localStorage.getItem("name");
+
+if (savedRoom && savedName) {
+  document.getElementById("roomId").value = savedRoom;
+  document.getElementById("name").value = savedName;
 }
