@@ -24,10 +24,18 @@ let currentRoom;
 window.joinRoom = function () {
   const roomId = document.getElementById("roomId").value;
   const name = document.getElementById("name").value;
+
+  currentRoom = roomId;
+
+  // ←ここ修正
+  playerId = localStorage.getItem("playerId");
+  if (!playerId) {
+    playerId = "player_" + Math.random().toString(36).substr(2, 5);
+    localStorage.setItem("playerId", playerId);
+  }
+
   localStorage.setItem("roomId", roomId);
   localStorage.setItem("name", name);
-  currentRoom = roomId;
-  playerId = "player_" + Math.random().toString(36).substr(2, 5);
 
   set(ref(db, `rooms/${roomId}/players/${playerId}`), {
     name: name,
@@ -112,10 +120,12 @@ function showResult(players) {
   document.body.appendChild(resultDiv);
 }
 
+import { get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
 function startGame() {
   const roles = ["人狼", "市民", "占い師", "警察"];
 
-  onValue(ref(db, `rooms/${currentRoom}/players`), (snapshot) => {
+  get(ref(db, `rooms/${currentRoom}/players`)).then((snapshot) => {
     const players = snapshot.val();
     const ids = Object.keys(players);
 
@@ -127,7 +137,7 @@ function startGame() {
         shuffled[1]
       ]);
     });
-  }, { onlyOnce: true });
+  });
 }
 
 playerId = localStorage.getItem("playerId");
