@@ -50,13 +50,63 @@ function updateUI(data) {
   document.getElementById("game").style.display = "block";
 
   const playersDiv = document.getElementById("players");
+  const cardDiv = document.getElementById("cardButtons");
+  const statusDiv = document.getElementById("status");
+
   playersDiv.innerHTML = "";
+  cardDiv.innerHTML = "";
+  statusDiv.innerHTML = "";
 
   if (!data || !data.players) return;
 
-  Object.values(data.players).forEach((p) => {
+  const players = data.players;
+  const me = players[playerId];
+
+  // 参加者表示
+  Object.values(players).forEach((p) => {
     const div = document.createElement("div");
     div.innerText = p.name;
     playersDiv.appendChild(div);
   });
+
+  // 自分のカード表示
+  if (me && me.cards) {
+    me.cards.forEach((card) => {
+      const btn = document.createElement("button");
+      btn.innerText = card;
+
+      btn.onclick = () => {
+        selectCard(card);
+      };
+
+      cardDiv.appendChild(btn);
+    });
+  }
+
+  // 全員選択チェック
+  const allSelected = Object.values(players).every(p => p.selected);
+
+  if (allSelected) {
+    statusDiv.innerText = "全員選択完了！";
+    showResult(players);
+  } else {
+    statusDiv.innerText = "他のプレイヤーを待っています...";
+  }
+}
+
+function selectCard(card) {
+  set(ref(db, `rooms/${currentRoom}/players/${playerId}/selected`), card);
+}
+
+function showResult(players) {
+  const resultDiv = document.createElement("div");
+  resultDiv.innerHTML = "<h3>結果</h3>";
+
+  Object.values(players).forEach((p) => {
+    const div = document.createElement("div");
+    div.innerText = `${p.name}: ${p.selected}`;
+    resultDiv.appendChild(div);
+  });
+
+  document.body.appendChild(resultDiv);
 }
